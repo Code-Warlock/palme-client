@@ -1,84 +1,104 @@
-import React, { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import React from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowRight, faPlayCircle, faLeaf, faAward, faUsers } from '@fortawesome/free-solid-svg-icons';
 
-// Placeholder video (Palm trees)
-const heroVideo = "https://assets.mixkit.co/videos/preview/mixkit-palm-trees-on-a-sunny-day-2285-large.mp4"; 
+
+const slideImages = [
+  "/images/carousel1.jpg",
+  "/images/carousel2.jpg", 
+  "/images/carousel.jpg"
+];
 
 const Hero = () => {
-  const textRef = useRef(null);
-  const videoBlobRef = useRef(null);
-  const leafRef = useRef(null);
-
-  useEffect(() => {
-    const tl = gsap.timeline();
-
-    // 1. Text slides up smoothly
-    tl.fromTo(textRef.current.children, 
-      { y: 50, opacity: 0 }, 
-      { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: "power3.out" }
-    )
-    // 2. The Video Blob grows in
-    .fromTo(videoBlobRef.current,
-      { scale: 0, rotation: -10 },
-      { scale: 1, rotation: 0, duration: 1.2, ease: "back.out(1.7)" },
-      "-=0.5"
-    );
-  }, []);
-
   return (
-    <div className="relative w-full min-h-screen bg-palmeLight flex items-center overflow-hidden pt-20">
+    <div className="bg-gradient-to-br from-white to-gray-50 min-h-[90vh] pt-8 pb-10 md:pb-20 px-6 relative overflow-hidden">
       
-      {/* Background Decor (Soft Circles like your inspo) */}
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-palmeAccent rounded-l-full opacity-50 z-0"></div>
       
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+      <div className="hidden md:block absolute top-0 right-0 w-[40%] h-[70%] bg-palmeGreen/5 rounded-bl-[10rem] pointer-events-none"></div>
+
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center h-full relative z-10">
         
-        {/* LEFT: Text Content */}
-        <div ref={textRef} className="text-left">
-          <span className="text-palmeGold font-bold tracking-widest uppercase text-sm mb-4 block">
-            100% Organic & Natural
-          </span>
-          <h1 className="text-palmeGreen font-display text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            Nature's Gold, <br />
-            <span className="italic font-light">Delivered Pure.</span>
+        
+        <div className="space-y-6 md:space-y-8 animate-fade-in-up mt-6 md:mt-0 order-1">
+          <div className="inline-flex items-center gap-2 border border-palmeGreen/20 rounded-full px-4 py-1 bg-white shadow-sm">
+             <span className="w-2 h-2 rounded-full bg-palmeGreen animate-pulse"></span>
+             <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-palmeGreen">Est. 2026 • Nigeria</span>
+          </div>
+          
+          <h1 className="text-4xl md:text-7xl font-serif leading-tight text-gray-900">
+            Wild <span className="text-palmeGreen">Palm Oil</span> <br/>
+            <span className="text-3xl md:text-6xl font-light text-gray-600">Liquid Gold.</span>
           </h1>
-          <p className="text-gray-600 mb-8 text-lg max-w-md leading-relaxed">
-            Sourced directly from the finest palms in Nigeria. Premium quality oil for your kitchen, delivered to your doorstep.
+          
+          <p className="text-base md:text-lg text-gray-600 max-w-lg leading-relaxed font-light">
+            We are committed to creating premium broad spectrum Palm products. 
+            100% Organic, filtered, and unadulterated.
           </p>
-          <div className="flex gap-4">
-            <button className="bg-palmeGreen hover:bg-green-800 text-white font-medium py-4 px-8 rounded-full shadow-lg transition-transform hover:-translate-y-1">
-              Shop Collection
+
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            <button className="bg-palmeGreen text-white font-bold py-4 px-10 rounded-full shadow-lg shadow-green-900/20 hover:bg-green-800 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1">
+              Shop Now <FontAwesomeIcon icon={faArrowRight} />
             </button>
-            <button className="flex items-center gap-2 text-palmeGreen font-bold py-4 px-6 hover:text-green-800 transition-colors">
-              <span>See How It's Made</span>
-              <span className="bg-palmeAccent p-2 rounded-full">▶</span>
+            
+            <button className="border-2 border-gray-200 text-gray-600 font-bold py-4 px-10 rounded-full hover:border-palmeGreen hover:text-palmeGreen transition-all flex items-center justify-center gap-2">
+              <FontAwesomeIcon icon={faPlayCircle} /> Our Process
             </button>
+          </div>
+          
+          
+          <div className="flex items-center gap-8 pt-6 md:pt-10 border-t border-gray-100 md:border-none">
+             <div className="flex flex-col items-center gap-2 text-gray-400 hover:text-palmeGreen transition-colors">
+                <FontAwesomeIcon icon={faLeaf} size="lg" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">100% Organic</span>
+             </div>
+             <div className="flex flex-col items-center gap-2 text-gray-400 hover:text-palmeGreen transition-colors">
+                <FontAwesomeIcon icon={faAward} size="lg" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Certified</span>
+             </div>
+             <div className="flex flex-col items-center gap-2 text-gray-400 hover:text-palmeGreen transition-colors">
+                <FontAwesomeIcon icon={faUsers} size="lg" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Community</span>
+             </div>
           </div>
         </div>
 
-        {/* RIGHT: Video inside a "Blob" Shape */}
-        <div className="relative flex justify-center">
-          <div 
-            ref={videoBlobRef}
-            className="relative w-[350px] h-[350px] md:w-[500px] md:h-[500px] overflow-hidden border-8 border-white shadow-2xl"
-            style={{ borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%" }} // CSS Logic for "Blob" shape
-          >
-            <video 
-              className="w-full h-full object-cover"
-              autoPlay 
-              loop 
-              muted 
-              playsInline
-            >
-              <source src={heroVideo} type="video/mp4" />
-            </video>
-          </div>
-          
-          {/* Floating Badge */}
-          <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-xl animate-bounce">
-            <p className="text-palmeGreen font-bold text-xl">⭐ 4.9/5</p>
-            <p className="text-xs text-gray-500">Customer Rating</p>
-          </div>
+        
+        
+        <div className="relative h-[300px] md:h-[600px] w-full order-2 lg:order-2 mt-4 lg:mt-0">
+           
+           <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] border border-gray-100 rounded-full pointer-events-none"></div>
+           
+           
+           <div className="h-full w-full rounded-3xl md:rounded-[3rem] overflow-hidden shadow-xl relative z-10 bg-white">
+             <Swiper
+               spaceBetween={0}
+               centeredSlides={true}
+               autoplay={{ delay: 4000, disableOnInteraction: false }}
+               pagination={{ clickable: true }}
+               modules={[Autoplay, Pagination, Navigation]}
+               className="w-full h-full"
+             >
+               {slideImages.map((img, index) => (
+                 <SwiperSlide key={index}>
+                   <div className="w-full h-full relative">
+                     <img src={img} alt={`Slide ${index}`} className="w-full h-full object-cover" />
+                     <div className="absolute inset-0 bg-black/10"></div>
+                   </div>
+                 </SwiperSlide>
+               ))}
+             </Swiper>
+           </div>
+
+           
+           <div className="absolute top-4 -left-2 md:top-10 md:-left-6 bg-white/95 backdrop-blur p-3 md:p-4 rounded-xl shadow-xl z-20 animate-bounce-slow border border-gray-100 scale-90 md:scale-100">
+              <p className="text-[10px] md:text-xs font-bold text-palmeGreen uppercase tracking-wider mb-1">New Harvest</p>
+              <p className="text-lg md:text-2xl font-serif font-bold text-gray-900">₦2,500</p>
+           </div>
         </div>
 
       </div>
