@@ -20,7 +20,6 @@ const Navbar = () => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
     
-    
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
@@ -41,7 +40,19 @@ const Navbar = () => {
   };
 
   
-  const navLinks = ['Home','About', 'Shop', 'Gallery', 'Testimonials', 'FAQ', 'Contact'];
+  const navLinks = ['Home','About', 'Shop', 'Custom Orders', 'Gallery', 'Testimonials', 'Contact'];
+
+  
+  const handleLinkClick = () => {
+      setIsOpen(false);
+      window.scrollTo(0, 0);
+  };
+
+  
+  const getPath = (item) => {
+      if(item === 'Home') return '/';
+      return `/${item.toLowerCase().replace(/\s+/g, '-')}`;
+  };
 
   return (
     <>
@@ -50,8 +61,7 @@ const Navbar = () => {
       }`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           
-          
-          <Link to="/" className="z-50 flex items-center">
+          <Link to="/" className="z-50 flex items-center" onClick={() => window.scrollTo(0,0)}>
             <img 
                src={logo} 
                alt="PalmeFoods" 
@@ -64,7 +74,7 @@ const Navbar = () => {
             {navLinks.map((item) => (
               <Link 
                 key={item} 
-                to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
+                to={getPath(item)}
                 className="font-bold text-sm text-gray-700 hover:text-palmeGreen transition-colors uppercase tracking-widest relative group"
               >
                 {item}
@@ -73,10 +83,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          
           <div className="hidden md:flex items-center gap-6">
-            
-            
             {user ? (
                 <div className="relative" ref={dropdownRef}>
                     <button 
@@ -129,7 +136,6 @@ const Navbar = () => {
                 </div>
             )}
             
-            
             <div 
               className="relative cursor-pointer group w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
               onClick={() => setIsCartOpen(true)}
@@ -143,7 +149,6 @@ const Navbar = () => {
             </div>
           </div>
 
-          
           <button 
             className="md:hidden z-[60] text-palmeGreen"
             onClick={() => setIsOpen(!isOpen)}
@@ -173,22 +178,14 @@ const Navbar = () => {
             {navLinks.map((item) => (
               <Link 
                 key={item} 
-                to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
-                onClick={() => setIsOpen(false)}
+                to={getPath(item)}
+                onClick={handleLinkClick} 
                 className="border-b border-gray-100 pb-3 hover:text-palmeGreen flex justify-between items-center"
               >
                 {item}
                 <span className="text-gray-300 text-sm">→</span>
               </Link>
             ))}
-             <Link 
-                to="/bulk-orders"
-                onClick={() => setIsOpen(false)}
-                className="border-b border-gray-100 pb-3 hover:text-palmeGreen flex justify-between items-center text-palmeGreen"
-              >
-                Bulk / Wholesale
-                <span className="text-gray-300 text-sm">→</span>
-              </Link>
           </div>
           
           <div className="mt-auto space-y-4 pt-8">
@@ -207,7 +204,7 @@ const Navbar = () => {
                             <p className="font-bold text-palmeGreen text-lg">{user.name}</p>
                         </div>
                     </div>
-                    <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block w-full text-center bg-white border border-gray-200 py-3 rounded-lg font-bold text-gray-700 mb-3 hover:bg-gray-50">
+                    <Link to="/dashboard" onClick={handleLinkClick} className="block w-full text-center bg-white border border-gray-200 py-3 rounded-lg font-bold text-gray-700 mb-3 hover:bg-gray-50">
                         My Dashboard
                     </Link>
                     <button onClick={handleLogout} className="block w-full text-center bg-red-100 text-red-600 py-3 rounded-lg font-bold hover:bg-red-200">

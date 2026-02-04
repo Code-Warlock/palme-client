@@ -26,9 +26,9 @@ import OrderSuccess from './components/OrderSuccess';
 import BulkOrder from './components/BulkOrder';
 import Dashboard from './components/Dashboard'; 
 import ResetPassword from './components/ResetPassword'; 
+import ScrollToTop from './components/ScrollToTop';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
 
 const LandingPage = () => (
   <>
@@ -39,10 +39,10 @@ const LandingPage = () => (
     <AboutSection isPreview={true} /> 
     <ProductShowcase limit={4} /> 
     <Testimonials />
+    <FAQ /> 
     <Footer />
   </>
 );
-
 
 const ShopPage = () => (
   <>
@@ -59,7 +59,6 @@ const ShopPage = () => (
   </>
 );
 
-
 const AboutPage = () => (
   <>
     <AnnouncementBar />
@@ -71,13 +70,23 @@ const AboutPage = () => (
   </>
 );
 
-
 const TestimonialsPage = () => (
     <>
       <AnnouncementBar />
       <Navbar />
       <div className="pt-20">
          <Testimonials />
+      </div>
+      <Footer />
+    </>
+);
+
+const FAQPage = () => (
+    <>
+      <AnnouncementBar />
+      <Navbar />
+      <div className="pt-20">
+         <FAQ />
       </div>
       <Footer />
     </>
@@ -112,6 +121,9 @@ function App() {
     <AuthProvider> 
       <CartProvider>
         <Router>
+          
+          <ScrollToTop />
+          
           <Toaster position="top-center" reverseOrder={false} />
           
           <div className="font-sans antialiased text-gray-900 bg-white relative">
@@ -122,23 +134,19 @@ function App() {
               <Route path="/shop" element={<ShopPage />} />
               <Route path="/about" element={<AboutPage />} /> 
               
-              
               <Route path="/testimonials" element={<TestimonialsPage />} />
               
               <Route path="/custom-orders" element={<BulkOrder />} />
-              <Route path="/faq" element={<FAQ />} />
+              <Route path="/faq" element={<FAQPage />} />
+              
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/locations" element={<FAQ />} /> 
-              
               
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-success" element={<OrderSuccess />} />
               
-              
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
-              
               
               <Route path="*" element={<NotFound />} />
             </Routes>

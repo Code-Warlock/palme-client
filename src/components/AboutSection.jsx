@@ -2,11 +2,9 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faHandHoldingHeart, faTruckFast, faCheckCircle, faUsers, faHandshake } from '@fortawesome/free-solid-svg-icons';
 
-
 const AboutSection = ({ isPreview = false }) => {
   return (
     <section className="py-24 bg-gradient-to-b from-green-50 to-white overflow-hidden">
-      
       
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-16">
         <div className="relative group">
@@ -43,10 +41,8 @@ const AboutSection = ({ isPreview = false }) => {
         </div>
       </div>
 
-      
       {!isPreview && (
-        <>
-          <div className="max-w-7xl mx-auto px-6 mb-32 animate-fade-in-up">
+        <div className="max-w-7xl mx-auto px-6 mb-16 animate-fade-in-up">
             <div className="text-center max-w-2xl mx-auto mb-16">
                 <span className="text-palmeGreen font-bold tracking-widest uppercase text-xs mb-2 block">Why Choose Palme</span>
                 <h3 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">More Than Just Oil</h3>
@@ -56,18 +52,7 @@ const AboutSection = ({ isPreview = false }) => {
                 <ServiceCard icon={faUsers} title="Bulk & Wholesale" desc="Reliable supply chains for industrial needs." />
                 <ServiceCard icon={faHandshake} title="Quality Guarantee" desc="NAFDAC-standard, no additives." />
             </div>
-          </div>
-
-          <div className="border-t border-gray-100 bg-white py-16">
-            <div className="max-w-7xl mx-auto px-6">
-                <p className="text-center text-gray-400 text-sm font-bold uppercase tracking-[0.2em] mb-10">Trusted Partners</p>
-                <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
-                    <div className="flex flex-col items-center gap-2"><div className="h-16 w-16 bg-black text-white rounded-full flex items-center justify-center font-bold text-2xl">DB</div><span className="font-bold">DBlackrose</span></div>
-                    <div className="flex flex-col items-center gap-2"><span className="text-2xl font-black text-gray-300">PALME<span className="text-gray-400">FARMS</span></span></div>
-                </div>
-            </div>
-          </div>
-        </>
+        </div>
       )}
     </section>
   );

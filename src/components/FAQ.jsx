@@ -35,8 +35,6 @@ const FAQ = () => {
 
   return (
     <>
-      <AnnouncementBar />
-      <Navbar />
       <div className="bg-gray-50 min-h-screen py-20 px-6">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
@@ -73,7 +71,6 @@ const FAQ = () => {
           )}
         </div>
       </div>
-      <Footer />
     </>
   );
 };
