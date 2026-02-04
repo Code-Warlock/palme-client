@@ -35,22 +35,21 @@ const AuthModal = () => {
     try {
       const endpoint = view === 'login' ? '/api/auth/login' : '/api/auth/register';
       
-      // ✅ FIX: Send only necessary data based on view
       const payload = view === 'login' 
         ? { email: formData.email, password: formData.password }
-        : formData; // Send everything (including phone) for register
+        : formData;
 
       const res = await axios.post(`${API_URL}${endpoint}`, payload);
       
       if (res.data && res.data.token) {
-          // Pass user object and token to context
-          login(res.data.user, res.data.token);
+          const userData = res.data.user ? res.data.user : res.data;
+
+          login(userData, res.data.token);
           setShowAuthModal(false);
-          toast.success(`Welcome ${res.data.user.name}!`);
+          toast.success(`Welcome ${userData.name}!`);
       }
     } catch (err) {
       console.error("Auth Error:", err);
-      // ✅ FIX: Better error message handling
       const msg = err.response?.data?.message || "Authentication failed";
       toast.error(msg);
     } finally {
@@ -190,7 +189,6 @@ const AuthModal = () => {
                     </button>
                     </div>
 
-                    
                     {view === 'signup' && (
                     <div className="relative">
                          <Phone className="absolute left-4 top-3.5 text-gray-400" size={20} />

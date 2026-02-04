@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   
- 
+  
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState('login'); 
 
@@ -18,10 +18,22 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('palme_user');
     const storedToken = localStorage.getItem('palme_token');
     
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-     
-     
+    
+    if (storedUser && storedUser !== "undefined" && storedToken) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Corrupt user data found, clearing storage.");
+        localStorage.removeItem('palme_user');
+        localStorage.removeItem('palme_token');
+        setUser(null);
+      }
+    } else {
+        
+        if (storedUser === "undefined") {
+            localStorage.removeItem('palme_user');
+            localStorage.removeItem('palme_token');
+        }
     }
     setLoading(false);
   }, []);
@@ -31,8 +43,6 @@ export const AuthProvider = ({ children }) => {
     setShowAuthModal(true);
   };
 
- 
- 
   const login = (userData, token) => {
       setUser(userData);
       localStorage.setItem('palme_user', JSON.stringify(userData));
