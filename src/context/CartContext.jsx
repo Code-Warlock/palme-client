@@ -8,11 +8,22 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
-  
   const [deliveryType, setDeliveryType] = useState('doorstep'); 
   const [selectedLocation, setSelectedLocation] = useState(null); 
 
   
+  useEffect(() => {
+    const savedCart = localStorage.getItem('palme_cart');
+    if (savedCart) {
+        setCartItems(JSON.parse(savedCart));
+    }
+  }, []);
+
+  
+  useEffect(() => {
+    localStorage.setItem('palme_cart', JSON.stringify(cartItems));
+  }, [cartItems]);
+
   const addToCart = (product) => {
     setCartItems(prev => {
       const existing = prev.find(item => item._id === product._id);
@@ -23,25 +34,42 @@ export const CartProvider = ({ children }) => {
       }
       return [...prev, { ...product, qty: 1 }];
     });
-    setIsCartOpen(true); 
+    
   };
 
-  
+  const decreaseQty = (id) => {
+    setCartItems(prev => {
+        const existing = prev.find(item => item._id === id);
+        if (existing.qty === 1) {
+            return prev.filter(item => item._id !== id); 
+        }
+        return prev.map(item => 
+            item._id === id ? { ...item, qty: item.qty - 1 } : item
+        );
+    });
+  };
+
   const removeFromCart = (id) => {
     setCartItems(prev => prev.filter(item => item._id !== id));
   };
 
-  
+  const clearCart = () => {
+      setCartItems([]);
+      localStorage.removeItem('palme_cart');
+  };
+
   const cartTotal = cartItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
   
   
-  const totalWeight = cartItems.reduce((acc, item) => acc + ((item.weightKg || 0.5) * item.qty), 0);
+  const totalWeight = cartItems.reduce((acc, item) => acc + ((item.weightKg || 1) * item.qty), 0);
 
   return (
     <CartContext.Provider value={{
       cartItems,
       addToCart,
+      decreaseQty,
       removeFromCart,
+      clearCart,
       isCartOpen,
       setIsCartOpen,
       cartTotal,

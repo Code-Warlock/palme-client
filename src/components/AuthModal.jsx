@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { X, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react'; 
+import { X, Mail, Lock, User, ArrowLeft, Eye, EyeOff, Phone } from 'lucide-react'; 
 import toast from 'react-hot-toast';
 
 const AuthModal = () => {
@@ -9,7 +9,6 @@ const AuthModal = () => {
   
   const [view, setView] = useState(activeTab || 'login'); 
   const [loading, setLoading] = useState(false);
-  
   
   const [showPassword, setShowPassword] = useState(false);
   
@@ -35,15 +34,23 @@ const AuthModal = () => {
     setLoading(true);
     try {
       const endpoint = view === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const res = await axios.post(`${API_URL}${endpoint}`, formData);
+      
+      // ✅ FIX: Send only necessary data based on view
+      const payload = view === 'login' 
+        ? { email: formData.email, password: formData.password }
+        : formData; // Send everything (including phone) for register
+
+      const res = await axios.post(`${API_URL}${endpoint}`, payload);
       
       if (res.data && res.data.token) {
+          // Pass user object and token to context
           login(res.data.user, res.data.token);
           setShowAuthModal(false);
           toast.success(`Welcome ${res.data.user.name}!`);
       }
     } catch (err) {
-      console.error("Login Error:", err);
+      console.error("Auth Error:", err);
+      // ✅ FIX: Better error message handling
       const msg = err.response?.data?.message || "Authentication failed";
       toast.error(msg);
     } finally {
@@ -62,11 +69,7 @@ const AuthModal = () => {
         setView('login'); 
     } catch (err) {
         const serverMessage = err.response?.data?.message;
-        if (err.response?.status === 500) {
-            toast.error("System error. Please try again later.");
-        } else {
-            toast.error(serverMessage || "Failed to send email");
-        }
+        toast.error(serverMessage || "Failed to send email");
     } finally {
         setLoading(false);
     }
@@ -125,12 +128,14 @@ const AuthModal = () => {
 
                 <div className="flex bg-gray-50 p-1 rounded-xl mb-8">
                     <button 
+                    type="button"
                     onClick={() => setView('login')}
                     className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'login' ? 'bg-white text-palmeGreen shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                     Log In
                     </button>
                     <button 
+                    type="button"
                     onClick={() => setView('signup')}
                     className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'signup' ? 'bg-white text-palmeGreen shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
@@ -185,14 +190,17 @@ const AuthModal = () => {
                     </button>
                     </div>
 
+                    
                     {view === 'signup' && (
                     <div className="relative">
+                         <Phone className="absolute left-4 top-3.5 text-gray-400" size={20} />
                         <input 
                         name="phone"
                         type="tel" 
-                        placeholder="Phone Number (Optional)" 
-                        className="w-full pl-4 p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-palmeGreen transition-colors"
+                        placeholder="Phone Number" 
+                        className="w-full pl-12 p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-palmeGreen transition-colors"
                         onChange={handleChange}
+                        required 
                         />
                     </div>
                     )}

@@ -91,7 +91,7 @@ const Footer = () => {
           <ul className="space-y-6 text-sm mb-10">
             <li className="flex items-start gap-3">
                <MapPin className="text-palmeGreen mt-0.5 shrink-0" size={18} />
-               <span className="text-gray-400">12 Palme Avenue, Osogbo, Osun State, Nigeria.</span>
+               <span className="text-gray-400">Ibadan, Nigeria.</span>
             </li>
             <li className="flex items-center gap-3">
                <Phone className="text-palmeGreen shrink-0" size={18} />
@@ -99,7 +99,7 @@ const Footer = () => {
             </li>
             <li className="flex items-center gap-3">
                <Mail className="text-palmeGreen shrink-0" size={18} />
-               <span className="text-gray-400">nali@palmefoods.com</span>
+               <span className="text-gray-400">oreo@palmefoods.com</span>
             </li>
           </ul>
 

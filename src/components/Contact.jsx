@@ -74,7 +74,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase text-gray-400">Email</p>
-                  <p className="font-bold text-xl text-gray-900">sales@palmefoods.com</p>
+                  <p className="font-bold text-xl text-gray-900">oreo@palmefoods.com</p>
                 </div>
               </div>
 
@@ -84,7 +84,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase text-gray-400">HQ</p>
-                  <p className="font-bold text-xl text-gray-900">12 Agro Road, Ibadan, Oyo State</p>
+                  <p className="font-bold text-xl text-gray-900">Ibadan, Nigeria, Oyo State</p>
                 </div>
               </div>
             </div>

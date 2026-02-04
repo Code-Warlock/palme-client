@@ -1,11 +1,12 @@
 import React from 'react';
 import { useLocation, Link, Navigate } from 'react-router-dom';
-import { CheckCircle, Printer, ArrowRight, Home, Package } from 'lucide-react';
+import { CheckCircle, Printer, ArrowRight, Home, Package, UserPlus } from 'lucide-react';
+import { useAuth } from '../context/AuthContext'; 
 
 const OrderSuccess = () => {
   const location = useLocation();
   const { order } = location.state || {};
-
+  const { user } = useAuth(); 
 
   if (!order) return <Navigate to="/" />;
 
@@ -17,7 +18,7 @@ const OrderSuccess = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 print:bg-white print:p-0">
       <div className="max-w-2xl w-full bg-white rounded-3xl shadow-xl overflow-hidden print:shadow-none">
         
-        
+       
         <div className="bg-palmeGreen p-8 text-center text-white print:bg-white print:text-black print:border-b-2 print:border-black">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 print:hidden">
             <CheckCircle size={32} className="text-white" />
@@ -29,7 +30,7 @@ const OrderSuccess = () => {
           </p>
         </div>
 
-        
+       
         <div className="p-8 space-y-6">
             <div className="flex justify-between items-start border-b border-gray-100 pb-6">
                 <div>
@@ -53,10 +54,10 @@ const OrderSuccess = () => {
                                 <div className="bg-gray-100 p-2 rounded text-gray-400"><Package size={16}/></div>
                                 <div>
                                     <span className="font-bold text-gray-800">{item.name}</span>
-                                    <span className="text-gray-500 ml-2">x{item.quantity}</span>
+                                    <span className="text-gray-500 ml-2">x{item.quantity || item.qty}</span>
                                 </div>
                             </div>
-                            <span className="font-medium text-gray-900">₦{(item.price * item.quantity).toLocaleString()}</span>
+                            <span className="font-medium text-gray-900">₦{(item.price * (item.quantity || item.qty)).toLocaleString()}</span>
                         </div>
                     ))}
                 </div>
@@ -66,9 +67,20 @@ const OrderSuccess = () => {
                 <span className="font-bold text-lg text-gray-800">Total Paid</span>
                 <span className="font-bold text-2xl text-palmeGreen">₦{order.totalAmount.toLocaleString()}</span>
             </div>
+            
+           
+            {!user && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-3 print:hidden">
+                    <UserPlus className="text-blue-500" size={24} />
+                    <div className="flex-1">
+                        <p className="text-sm font-bold text-blue-900">Create an account to track this order.</p>
+                        <p className="text-xs text-blue-700">Use the same email ({order.customer.email}) to sync your history.</p>
+                    </div>
+                </div>
+            )}
         </div>
 
-        
+       
         <div className="p-6 bg-gray-50 flex flex-col sm:flex-row gap-3 print:hidden">
             <Link to="/" className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-xl font-bold text-gray-600 hover:bg-white transition-colors">
                 <Home size={18} /> Return Home

@@ -1,182 +1,138 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; 
-import axios from 'axios';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faTrash, faTruck, faMapMarkerAlt, faInfoCircle, faImage, faArrowRight } from '@fortawesome/free-solid-svg-icons'; 
+import React from 'react';
+import { X, Trash2, ShoppingBag, ArrowRight, Plus, Minus, Truck, MapPin } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { Link, useNavigate } from 'react-router-dom';
 
 const CartDrawer = () => {
   const { 
-    isCartOpen, setIsCartOpen, cartItems, removeFromCart, cartTotal, 
-    deliveryType, setDeliveryType, selectedLocation, setSelectedLocation 
+    isCartOpen, 
+    setIsCartOpen, 
+    cartItems, 
+    removeFromCart, 
+    cartTotal, 
+    addToCart, 
+    decreaseQty,
+    deliveryType,
+    setDeliveryType 
   } = useCart();
+  
+  const navigate = useNavigate();
 
-  const [parks, setParks] = useState([]);
-  const [loadingParks, setLoadingParks] = useState(false);
-
-  useEffect(() => {
-    const fetchParks = async () => {
-      setLoadingParks(true);
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const res = await axios.get(`${API_URL}/api/locations`);
-        setParks(res.data);
-      } catch (err) {
-        console.error("Failed to load parks", err);
-      } finally {
-        setLoadingParks(false);
-      }
-    };
-    if (isCartOpen) fetchParks();
-  }, [isCartOpen]);
+  if (!isCartOpen) return null;
 
   return (
     <>
-      
       <div 
-        className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
-          isCartOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
-        }`}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
         onClick={() => setIsCartOpen(false)}
       ></div>
 
-      
-      <div 
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-[70] flex flex-col transform transition-transform duration-300 ease-out ${
-          isCartOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
+      <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white z-[70] shadow-2xl flex flex-col transform transition-transform duration-300">
         
-        
-        <div className="p-6 bg-palmeGreen text-white flex justify-between items-center shadow-md">
-          <h2 className="text-xl font-bold font-serif tracking-wide">Your Cart</h2>
-          <button onClick={() => setIsCartOpen(false)} className="hover:text-red-200 transition-colors bg-white/10 w-8 h-8 rounded-full flex items-center justify-center">
-            <FontAwesomeIcon icon={faTimes} />
+        {/* Header */}
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="text-palmeGreen" />
+            <span className="font-bold text-lg font-serif">Your Cart ({cartItems.length})</span>
+          </div>
+          <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <X size={20} className="text-gray-500" />
           </button>
         </div>
 
-        
+        {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {cartItems.length === 0 ? (
-            <div className="text-center text-gray-400 mt-20 flex flex-col items-center">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                 <FontAwesomeIcon icon={faTruck} size="2x" className="text-gray-200" />
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
+                <ShoppingBag size={32} className="text-gray-300" />
               </div>
-              <p className="font-bold text-gray-500">Your cart is empty.</p>
-              <button onClick={() => setIsCartOpen(false)} className="mt-4 text-palmeGreen font-bold underline hover:text-green-800">Start Shopping</button>
+              <p className="text-gray-500 font-medium">Your cart is currently empty.</p>
+              <button 
+                onClick={() => { setIsCartOpen(false); navigate('/shop'); }}
+                className="text-palmeGreen font-bold hover:underline"
+              >
+                Start Shopping
+              </button>
             </div>
           ) : (
             cartItems.map((item) => (
-              <div key={item._id} className="flex gap-4 border-b border-gray-100 pb-4">
-                
-                
-                <div className="w-20 h-20 bg-gray-50 rounded-lg flex items-center justify-center text-gray-300 relative overflow-hidden">
-                   {item.image ? (
-                     <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2" />
-                   ) : (
-                     <FontAwesomeIcon icon={faImage} size="2x" />
-                   )}
+              <div key={item._id} className="flex gap-4 animate-fade-in">
+                <div className="w-24 h-24 bg-gray-50 rounded-xl flex-shrink-0 border border-gray-100 p-2">
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
                 </div>
                 
-                
-                <div className="flex-1">
-                  <h3 className="font-bold text-gray-800 font-serif">{item.name}</h3>
-                  <p className="text-sm text-gray-500">{item.size}</p>
-                  <p className="text-palmeGreen font-bold mt-1">₦{item.price.toLocaleString()}</p>
-                </div>
-                
-                
-                <div className="flex flex-col items-end justify-between">
-                  <button onClick={() => removeFromCart(item._id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                    <FontAwesomeIcon icon={faTrash} />
-                  </button>
-                  <span className="font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded text-xs">x{item.qty}</span>
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-bold text-gray-800 font-serif leading-tight">{item.name}</h3>
+                      <button onClick={() => removeFromCart(item._id)} className="text-gray-400 hover:text-red-500 transition-colors">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">{item.size}</p>
+                  </div>
+                  
+                  <div className="flex justify-between items-end">
+                    <span className="font-bold text-palmeGreen">₦{Number(item.price).toLocaleString()}</span>
+                    
+                    {/* QTY CONTROLS */}
+                    <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
+                      <button 
+                        onClick={() => decreaseQty(item._id)}
+                        className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-palmeGreen transition-colors"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="text-sm font-bold w-4 text-center">{item.qty}</span>
+                      <button 
+                        onClick={() => addToCart(item)}
+                        className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-palmeGreen transition-colors"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))
           )}
-
-          
-          {cartItems.length > 0 && (
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-8">
-              <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
-                <FontAwesomeIcon icon={faTruck} className="text-palmeGreen"/> Delivery Method
-              </h3>
-              
-              <div className="flex bg-white p-1 rounded-lg border border-gray-200 mb-4 shadow-sm">
-                <button 
-                  onClick={() => setDeliveryType('doorstep')}
-                  className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${deliveryType === 'doorstep' ? 'bg-palmeGreen text-white shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}
-                >
-                  Doorstep
-                </button>
-                <button 
-                  onClick={() => setDeliveryType('park')}
-                  className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${deliveryType === 'park' ? 'bg-palmeGreen text-white shadow-sm' : 'text-gray-500 hover:bg-gray-50'}`}
-                >
-                  Park Pickup
-                </button>
-              </div>
-
-              {deliveryType === 'doorstep' && (
-                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-100 flex gap-3">
-                    <FontAwesomeIcon icon={faInfoCircle} className="mt-1 text-blue-500 shrink-0"/>
-                    <span className="text-xs leading-relaxed">Shipping fees are calculated based on total weight. You will be contacted by our logistics team after checkout.</span>
-                </div>
-              )}
-
-              {deliveryType === 'park' && (
-                <div className="space-y-3">
-                  {loadingParks ? (
-                    <p className="text-xs text-gray-400">Loading parks...</p>
-                  ) : (
-                    <>
-                      <label className="block text-xs font-bold text-gray-700 uppercase flex items-center gap-2">
-                        <FontAwesomeIcon icon={faMapMarkerAlt} /> Select Pickup Location
-                      </label>
-                      <select 
-                        className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-palmeGreen focus:border-transparent outline-none"
-                        onChange={(e) => {
-                          const park = parks.find(p => p._id === e.target.value);
-                          setSelectedLocation(park);
-                        }}
-                      >
-                        <option value="">-- Choose a Park --</option>
-                        {parks.map(park => (
-                          <option key={park._id} value={park._id}>
-                            {park.state} - {park.parkName}
-                          </option>
-                        ))}
-                      </select>
-
-                      {selectedLocation && (
-                         <div className="mt-2 bg-yellow-50 p-3 rounded-lg border border-yellow-100 text-sm animate-pulse">
-                            <p className="font-bold text-yellow-800 text-xs uppercase mb-1">Pickup Instruction:</p>
-                            <p className="text-gray-700 text-xs">{selectedLocation.adminNote}</p>
-                            <p className="text-[10px] text-gray-400 mt-2 uppercase font-bold">{selectedLocation.address}</p>
-                         </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        
+        {/* Footer / Summary */}
         {cartItems.length > 0 && (
-          <div className="p-6 border-t border-gray-100 bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-500 font-medium">Subtotal</span>
-              <span className="text-2xl font-bold text-palmeGreen">₦{cartTotal.toLocaleString()}</span>
+          <div className="p-6 bg-gray-50 border-t border-gray-100">
+            
+            {/* Delivery Toggle in Drawer */}
+            <div className="mb-6 bg-white p-1 rounded-xl border border-gray-200 flex">
+               <button 
+                  onClick={() => setDeliveryType('doorstep')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${deliveryType === 'doorstep' ? 'bg-palmeGreen text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+               >
+                  <Truck size={16} /> Delivery
+               </button>
+               <button 
+                  onClick={() => setDeliveryType('park')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${deliveryType === 'park' ? 'bg-palmeGreen text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+               >
+                  <MapPin size={16} /> Pickup
+               </button>
             </div>
+
+            <div className="space-y-3 mb-6">
+              <div className="flex justify-between items-center text-gray-600">
+                <span>Subtotal</span>
+                <span className="font-bold text-gray-900">₦{cartTotal.toLocaleString()}</span>
+              </div>
+              <p className="text-xs text-gray-400 text-center">Shipping calculated at checkout</p>
+            </div>
+
             <Link 
-              to="/checkout"
+              to="/checkout" 
               onClick={() => setIsCartOpen(false)}
-              className="w-full bg-palmeGreen hover:bg-green-800 text-white font-bold py-4 rounded-xl shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] flex items-center justify-center gap-2"
+              className="w-full bg-palmeGreen text-white font-bold py-4 rounded-xl shadow-lg shadow-green-900/10 flex items-center justify-center gap-2 hover:bg-green-800 transition-colors"
             >
-              Proceed to Checkout <FontAwesomeIcon icon={faArrowRight} />
+              Checkout Now <ArrowRight size={18} />
             </Link>
           </div>
         )}

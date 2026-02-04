@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, ArrowRight, Star, Search, Filter } from 'lucide-react';
+import { ShoppingCart, ArrowRight, Star, Search, Filter, Plus, Minus, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -10,11 +10,16 @@ const ProductShowcase = ({ limit }) => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest'); 
 
-  const { addToCart } = useCart();
+  const { addToCart, decreaseQty, cartItems } = useCart();
+
+  // Helper to safely get price number
+  const getPrice = (p) => {
+      if (!p.price) return 0;
+      return parseFloat(p.price.toString().replace(/,/g, ''));
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -30,49 +35,40 @@ const ProductShowcase = ({ limit }) => {
     fetchProducts();
   }, []);
 
-  
   useEffect(() => {
     let result = [...products];
 
-    
     if (searchTerm) {
         result = result.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
 
-    
+    // SAFE SORT LOGIC
     if (sortBy === 'low-high') {
-        result.sort((a, b) => a.price - b.price);
+        result.sort((a, b) => getPrice(a) - getPrice(b));
     } else if (sortBy === 'high-low') {
-        result.sort((a, b) => b.price - a.price);
+        result.sort((a, b) => getPrice(b) - getPrice(a));
     } else {
-        
-        
         result.reverse(); 
     }
 
     setFilteredProducts(result);
   }, [products, searchTerm, sortBy]);
 
-  
   const displayedProducts = limit ? products.slice(0, limit) : filteredProducts;
+  const getCartItem = (id) => cartItems.find(item => item._id === id);
 
   return (
     <section className="py-24 px-6 max-w-7xl mx-auto">
        
-       
        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
-           <motion.div 
-             initial={{ opacity: 0, x: -20 }}
-             whileInView={{ opacity: 1, x: 0 }}
-             transition={{ duration: 0.6 }}
-           >
+           <div className="animate-fade-in-up">
                <span className="text-palmeGreen font-bold tracking-widest uppercase text-xs bg-green-50 px-3 py-1 rounded-full border border-green-100">
                   Shop The Collection
                </span>
                <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 mt-4 tracking-tight">
                   Pure. Premium. <span className="text-palmeGreen">Palme.</span>
                </h2>
-           </motion.div>
+           </div>
 
            {limit && (
                <Link to="/shop" className="group hidden md:flex items-center gap-2 text-gray-500 font-bold hover:text-palmeGreen transition-colors">
@@ -84,11 +80,8 @@ const ProductShowcase = ({ limit }) => {
            )}
        </div>
 
-       
        {!limit && (
          <div className="mb-10 flex flex-col md:flex-row gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-            
-            
             <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input 
@@ -99,8 +92,6 @@ const ProductShowcase = ({ limit }) => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
-
-            
             <div className="flex items-center gap-2">
                 <Filter size={18} className="text-gray-400" />
                 <span className="text-sm font-bold text-gray-600">Sort by:</span>
@@ -117,70 +108,71 @@ const ProductShowcase = ({ limit }) => {
          </div>
        )}
 
-       
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {displayedProducts.length === 0 ? (
               <div className="col-span-full text-center py-20 text-gray-400">
-                  <p>No products found matching your search.</p>
+                  <p>No products found.</p>
               </div>
           ) : (
-            displayedProducts.map((product, index) => (
+            displayedProducts.map((product, index) => {
+                const cartItem = getCartItem(product._id);
+                return (
                 <motion.div 
                     key={product._id} 
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.05 }}
                     className="group relative bg-white rounded-3xl border border-gray-100 hover:border-palmeGreen/30 hover:shadow-2xl hover:shadow-green-900/5 transition-all duration-300 flex flex-col overflow-hidden"
                 >
-                    
                     <div className="h-72 bg-[#F3F5F7] relative overflow-hidden">
                         <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-500"
+                          src={product.image} 
+                          alt={product.name} 
+                          className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-500"
                         />
-                        
-                        
-                        <div className="absolute top-4 left-4 flex flex-col gap-2">
-                            
-                            {product.stock && product.stock < 20 && (
-                                <span className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
-                                    Low Stock
-                                </span>
-                            )}
+                        <div className="absolute top-4 left-4">
+                            {product.stock < 20 && <span className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Low Stock</span>}
                         </div>
 
-                        
-                        <div className="absolute inset-x-4 bottom-4 translate-y-20 group-hover:translate-y-0 transition-transform duration-300">
-                        <button 
-                            onClick={() => { addToCart(product); toast.success(`Added ${product.name} to cart`); }} 
-                            className="w-full bg-palmeGreen text-white font-bold py-3 rounded-xl shadow-lg shadow-green-900/20 flex items-center justify-center gap-2 hover:bg-green-800 transition-colors"
-                        >
-                            <ShoppingCart size={18} /> Add to Cart
-                        </button>
+                        <div className="absolute inset-x-4 bottom-4 translate-y-20 group-hover:translate-y-0 transition-transform duration-300 z-10">
+                           {cartItem ? (
+                               <div className="w-full bg-palmeGreen text-white font-bold py-2 rounded-xl shadow-lg flex items-center justify-between px-4">
+                                   <button onClick={() => decreaseQty(product._id)} className="p-1 hover:bg-green-800 rounded-full transition-colors">
+                                      {cartItem.qty === 1 ? <Trash2 size={16} /> : <Minus size={16} />}
+                                   </button>
+                                   <span className="text-lg">{cartItem.qty}</span>
+                                   <button onClick={() => addToCart(product)} className="p-1 hover:bg-green-800 rounded-full transition-colors">
+                                      <Plus size={16} />
+                                   </button>
+                               </div>
+                           ) : (
+                               <button 
+                                   onClick={() => { addToCart(product); toast.success(`Added ${product.name}`); }} 
+                                   className="w-full bg-white text-gray-900 font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-palmeGreen hover:text-white transition-colors"
+                               >
+                                   <ShoppingCart size={18} /> Add to Cart
+                               </button>
+                           )}
                         </div>
                     </div>
 
-                    
                     <div className="p-6 flex flex-col flex-grow">
                         <div className="flex justify-between items-start mb-2">
-                            
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{product.category || ""}</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{product.category}</p>
                             <div className="flex gap-0.5 text-palmeGold">
                                 {[1,2,3,4,5].map(s => <Star key={s} size={10} fill="currentColor" />)}
                             </div>
                         </div>
-                        
                         <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-palmeGreen transition-colors">{product.name}</h3>
                         <p className="text-gray-500 text-sm mb-4">{product.size}</p>
-                        
                         <div className="mt-auto flex justify-between items-center border-t border-gray-50 pt-4">
-                            <span className="font-serif font-bold text-2xl text-gray-900">₦{product.price.toLocaleString()}</span>
+                            <span className="font-serif font-bold text-2xl text-gray-900">₦{Number(product.price).toLocaleString()}</span>
+                            {cartItem && <span className="text-xs font-bold text-palmeGreen bg-green-50 px-2 py-1 rounded-lg">{cartItem.qty} in cart</span>}
                         </div>
                     </div>
                 </motion.div>
-            ))
+                );
+            })
           )}
        </div>
 

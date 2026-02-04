@@ -4,15 +4,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { PaystackButton } from 'react-paystack'; 
 import { useAuth } from '../context/AuthContext';
-import { ChevronRight, HelpCircle, Lock, AlertCircle, Wifi, Tag, X } from 'lucide-react';
+import { ChevronRight, HelpCircle, Lock, AlertCircle, Tag, X, Truck, Info } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const Checkout = () => {
-    const { cartItems = [], cartTotal = 0, deliveryType = 'doorstep', setDeliveryType, selectedLocation, setSelectedLocation, clearCart } = useCart();
+    const { cartItems = [], cartTotal = 0, totalWeight = 0, deliveryType = 'doorstep', setDeliveryType, selectedLocation, setSelectedLocation, clearCart } = useCart();
     const { user, setShowAuthModal } = useAuth();
     const navigate = useNavigate();
 
-    
     const [email, setEmail] = useState(user?.email || '');
     const [firstName, setFirstName] = useState(user?.name?.split(' ')[0] || '');
     const [lastName, setLastName] = useState(user?.name?.split(' ')[1] || '');
@@ -20,33 +19,38 @@ const Checkout = () => {
     const [phone, setPhone] = useState(user?.phone || '');
     const [selectedState, setSelectedState] = useState(selectedLocation?.state || '');
 
-    
     const [couponCode, setCouponCode] = useState('');
     const [discount, setDiscount] = useState(0);
     const [isCouponApplied, setIsCouponApplied] = useState(false); 
-
     
     const [parks, setParks] = useState([]);
     const [settings, setSettings] = useState({
         doorstep_price: 10000,
         park_price: 5000,
         doorstep_note: "Shipping fees are calculated based on weight.",
-        park_note: "Please bring a valid ID for pickup."
+        park_note: "Please bring a valid ID for pickup.",
+        weight_threshold: 20,
+        heavy_weight_note: "Order too heavy. We will contact you."
     });
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const API_URL = import.meta.env.VITE_API_URL || 'http:
-                const parksRes = await axios.get(`${API_URL}/api/locations`);
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                
+                // Fetch Settings and Parks
+                const [parksRes, settingsRes] = await Promise.all([
+                    axios.get(`${API_URL}/api/locations`),
+                    axios.get(`${API_URL}/api/settings`)
+                ]);
+
                 if (Array.isArray(parksRes.data)) setParks(parksRes.data);
 
-                const settingsRes = await axios.get(`${API_URL}/api/settings`);
                 if (settingsRes.data) {
-                const settingsObj = Array.isArray(settingsRes.data) 
-                    ? settingsRes.data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {})
-                    : settingsRes.data;
-                setSettings(prev => ({ ...prev, ...settingsObj }));
+                    const settingsObj = Array.isArray(settingsRes.data) 
+                        ? settingsRes.data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {})
+                        : settingsRes.data;
+                    setSettings(prev => ({ ...prev, ...settingsObj }));
                 }
             } catch (err) { console.error("Data Load Error:", err); }
         };
@@ -61,59 +65,84 @@ const Checkout = () => {
         }
     }, [user]);
 
+    // Handle Location Selection updates
     useEffect(() => {
         if (selectedLocation && selectedLocation.state) {
             setSelectedState(selectedLocation.state);
         }
     }, [selectedLocation]);
 
-    
-    const filteredParks = Array.isArray(parks) ? parks.filter(p => p?.state?.toLowerCase() === selectedState.toLowerCase()) : [];
-    const shippingFee = deliveryType === 'doorstep' ? Number(settings.doorstep_price) : Number(settings.park_price);
-    
-    
-    const finalTotal = (cartTotal || 0) + shippingFee - discount;
+    // ✅ HELPER: Safely clean and parse prices
+    const getNumericPrice = (priceVal) => {
+        if (priceVal === undefined || priceVal === null) return 0;
+        const cleanString = priceVal.toString().replace(/,/g, '');
+        const number = parseFloat(cleanString);
+        return isNaN(number) ? 0 : number;
+    };
 
+    const filteredParks = Array.isArray(parks) ? parks.filter(p => p?.state?.toLowerCase() === selectedState.toLowerCase()) : [];
+    
+    // ✅ FIXED: SHIPPING FEE CALCULATION
+    let shippingFee = 0;
+    if (deliveryType === 'doorstep') {
+        shippingFee = getNumericPrice(settings.doorstep_price);
+    } else {
+        // Look for 'basePrice' specifically (based on your Schema)
+        if (selectedLocation) {
+            shippingFee = getNumericPrice(selectedLocation.basePrice || selectedLocation.price || settings.park_price);
+        } else {
+            shippingFee = getNumericPrice(settings.park_price);
+        }
+    }
+    
+    const weightLimit = getNumericPrice(settings.weight_threshold) || 20;
+    const isHeavy = totalWeight > weightLimit;
+    const heavyMessage = settings.heavy_weight_note 
+        ? settings.heavy_weight_note.replace('[limit]', weightLimit)
+        : `Your order exceeds ${weightLimit}kg. Additional shipping charges may apply.`;
+
+    const finalTotal = (cartTotal || 0) + shippingFee - discount;
     const [reference] = useState((new Date()).getTime().toString());
 
-    
-    const handleApplyCoupon = () => {
+    // ✅ FIXED COUPON LOGIC (Connects to Server)
+    const handleApplyCoupon = async () => {
         if (!couponCode.trim()) {
-            toast.error("Please enter a coupon code first.");
+            toast.error("Enter a code first.");
             return;
         }
 
-        let totalDiscount = 0;
-        let applied = false;
+        const code = couponCode.trim().toUpperCase();
 
-        cartItems.forEach(item => {
-            const itemData = item.data || item; 
-            const itemDiscountCode = itemData.discountCode || item.discountCode;
-            const itemDiscountPrice = itemData.discountPrice || item.discountPrice;
+        // 1. Global Welcome Check (Optional Hardcoded)
+        if (code === 'WELCOME') {
+            const welcomeDiscount = cartTotal * 0.10;
+            setDiscount(welcomeDiscount);
+            setIsCouponApplied(true);
+            toast.success(`Welcome Gift Applied! Saved ₦${welcomeDiscount.toLocaleString()}`);
+            return;
+        }
 
-            if (itemDiscountCode && 
-                itemDiscountCode.trim().toLowerCase() === couponCode.trim().toLowerCase() &&
-                itemDiscountPrice) {
+        // 2. Server Verification
+        try {
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const res = await axios.post(`${API_URL}/api/coupons/verify`, { code });
+
+            if (res.data.valid) {
+                const percent = res.data.discountPercent || 0;
+                const calculatedDiscount = (cartTotal * percent) / 100;
                 
-                const savingsPerUnit = item.price - item.discountPrice;
-                if (savingsPerUnit > 0) {
-                    totalDiscount += (savingsPerUnit * item.qty);
-                    applied = true;
-                }
+                setDiscount(calculatedDiscount);
+                setIsCouponApplied(true);
+                toast.success(`Success! ${percent}% Discount Applied.`);
             }
-        });
-
-        if (applied) {
-            setDiscount(totalDiscount);
-            setIsCouponApplied(true); 
-            toast.success(`Coupon Applied! You saved ₦${totalDiscount.toLocaleString()}`);
-        } else {
-            toast.error("Invalid coupon code, or it doesn't apply to items in your cart.");
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.message || "Invalid or inactive coupon.";
+            toast.error(msg);
             setDiscount(0);
         }
     };
 
-    
     const handleRemoveCoupon = () => {
         setDiscount(0);
         setCouponCode('');
@@ -130,11 +159,13 @@ const Checkout = () => {
             items: cartItems,
             deliveryMethod: deliveryType,
             parkLocation: selectedLocation ? (selectedLocation.name || selectedLocation.parkName) : '',
-            totalAmount: finalTotal
+            totalAmount: finalTotal,
+            totalWeight: totalWeight, 
+            isHeavy: isHeavy
         };
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http:
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
             
             const response = await fetch(`${API_URL}/api/orders`, {
                 method: 'POST',
@@ -160,7 +191,7 @@ const Checkout = () => {
 
     const componentProps = {
         email,
-        amount: finalTotal * 100, 
+        amount: Math.round(finalTotal * 100), 
         metadata: { custom_fields: [{ display_name: "Delivery", variable_name: "delivery", value: deliveryType }] },
         publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY, 
         text: "Pay Now",
@@ -182,72 +213,23 @@ const Checkout = () => {
         else if (deliveryType === 'park' && !selectedLocation) toast.error("Select park");
     };
 
-    
-    const testConnection = async () => {
-        const toastId = toast.loading("Analyzing network stability...");
-        const startTime = Date.now();
-        
-        try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http:
-            await fetch(`${API_URL}/api/products?limit=1`); 
-            
-            const endTime = Date.now();
-            const latency = endTime - startTime;
-            
-            let speedStatus = "Excellent";
-            if (latency > 500) speedStatus = "Good";
-            if (latency > 1500) speedStatus = "Stable";
-
-            toast.success(
-                <div className="text-sm">
-                    <p className="font-bold">System Ready & Secure 🟢</p>
-                    <p className="text-xs opacity-90 mt-1">Speed: {speedStatus} ({latency}ms)</p>
-                    <p className="text-xs opacity-90">Encryption: AES-256 (Paystack)</p>
-                </div>, 
-                { id: toastId, duration: 5000 }
-            );
-        } catch (e) {
-            toast.error(
-                <div>
-                    <p className="font-bold">Connection Unstable 🔴</p>
-                    <p className="text-xs mt-1">Please check your internet before paying.</p>
-                </div>, 
-                { id: toastId }
-            );
-        }
-    };
-
-    const nigerianStates = [
-        "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"
-    ];
-
     return (
         <div className="min-h-screen bg-gray-100 py-10 px-4 font-sans text-gray-800 flex justify-center items-start">
         <Toaster position="top-center" />
 
         <div className="w-full max-w-6xl bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col lg:flex-row border border-gray-200">
             
-            {/* LEFT COLUMN: FORM */}
+            {/* LEFT COLUMN */}
             <div className="w-full lg:w-[58%] lg:pr-14 lg:pl-10 pt-10 pb-12 px-6 order-2 lg:order-1 bg-white">
                 
                 <div className="mb-6 flex justify-between items-center">
-                    <Link to="/" className="text-3xl font-serif font-bold text-gray-900 tracking-tight hover:text-palmeGreen transition-colors">
-                        Palme Foods
-                    </Link>
-                    <button onClick={testConnection} className="text-xs flex items-center gap-1 text-gray-400 hover:text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                        <Wifi size={12}/> Test
-                    </button>
+                    <Link to="/" className="text-3xl font-serif font-bold text-gray-900 tracking-tight hover:text-palmeGreen transition-colors">Palme Foods</Link>
                 </div>
 
-                {/* Breadcrumbs */}
                 <div className="flex items-center gap-2 text-xs font-medium mb-8 text-gray-500">
                     <Link to="/shop" className="text-palmeGreen hover:underline">Cart</Link> 
                     <ChevronRight size={12} />
-                    <span className="text-gray-900">Information</span> 
-                    <ChevronRight size={12} />
-                    <span>Shipping</span> 
-                    <ChevronRight size={12} />
-                    <span>Payment</span>
+                    <span>Shipping & Payment</span> 
                 </div>
 
                 <section className="mb-10">
@@ -258,9 +240,19 @@ const Checkout = () => {
                     <input type="email" placeholder="Email or mobile phone number" className="w-full p-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-palmeGreen outline-none text-sm" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </section>
 
-                {/* Delivery Method */}
                 <section className="mb-8">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Delivery Method</h2>
+                    
+                    {isHeavy && (
+                        <div className="mb-4 bg-orange-50 border border-orange-200 p-4 rounded-lg flex gap-3">
+                            <Truck className="text-orange-600 flex-shrink-0" size={20} />
+                            <div>
+                                <h3 className="text-sm font-bold text-orange-800">Heavy Order ({totalWeight}kg)</h3>
+                                <p className="text-xs text-orange-700 mt-1">{heavyMessage}</p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="border border-gray-300 rounded-lg overflow-hidden">
                         <div 
                             className={`flex items-center justify-between p-4 cursor-pointer border-b border-gray-200 ${deliveryType === 'park' ? 'bg-palmeGreen/10' : 'bg-white'}`}
@@ -272,7 +264,11 @@ const Checkout = () => {
                                 </div>
                                 <span className="text-sm font-bold text-gray-800">Park Pickup</span>
                             </div>
-                            <span className="text-sm font-bold text-gray-900">₦{Number(settings.park_price).toLocaleString()}</span>
+                            <span className="text-sm font-bold text-gray-900">
+                                {selectedLocation 
+                                    ? `₦${getNumericPrice(selectedLocation.basePrice).toLocaleString()}` 
+                                    : `From ₦${getNumericPrice(settings.park_price).toLocaleString()}`}
+                            </span>
                         </div>
 
                         <div 
@@ -285,13 +281,13 @@ const Checkout = () => {
                                 </div>
                                 <span className="text-sm font-bold text-gray-800">Doorstep Delivery</span>
                             </div>
-                            <span className="text-sm font-bold text-gray-900">₦{Number(settings.doorstep_price).toLocaleString()}</span>
+                            <span className="text-sm font-bold text-gray-900">₦{getNumericPrice(settings.doorstep_price).toLocaleString()}</span>
                         </div>
                     </div>
                 </section>
 
                 <div className="mb-8 bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-3 animate-fade-in">
-                    <div className="mt-0.5 text-blue-500"><AlertCircle size={18} /></div>
+                    <div className="mt-0.5 text-blue-500"><Info size={18} /></div>
                     <div className="text-sm text-gray-700 leading-relaxed">
                         <span className="font-bold text-blue-800 block mb-1">
                             {deliveryType === 'doorstep' ? 'Delivery Note:' : 'Pickup Instruction:'}
@@ -300,7 +296,6 @@ const Checkout = () => {
                     </div>
                 </div>
 
-                {/* Shipping Address */}
                 <section className="mb-10">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Shipping Address</h2>
                     <div className="space-y-3">
@@ -311,7 +306,7 @@ const Checkout = () => {
                                 onChange={(e) => { setSelectedState(e.target.value); setSelectedLocation(null); }}
                             >
                                 <option value="">Select State</option>
-                                {nigerianStates.map(state => (<option key={state} value={state}>{state}</option>))}
+                                {["Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"].map(state => (<option key={state} value={state}>{state}</option>))}
                             </select>
                             <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" size={16} />
                         </div>
@@ -342,7 +337,9 @@ const Checkout = () => {
                                         >
                                             <option value="">-- Select a Park --</option>
                                             {filteredParks.map(park => (
-                                                <option key={park._id} value={park._id}>{park.name || park.parkName} ({park.address})</option>
+                                                <option key={park._id} value={park._id}>
+                                                    {park.name || park.parkName} - ₦{getNumericPrice(park.basePrice).toLocaleString()}
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
@@ -374,7 +371,7 @@ const Checkout = () => {
                 </div>
             </div>
 
-            {/* RIGHT COLUMN: SUMMARY */}
+            {/* RIGHT COLUMN */}
             <div className="w-full lg:w-[42%] bg-[#FAFAFA] border-l border-gray-200 pt-10 px-6 lg:pl-10 lg:pr-14 order-1 lg:order-2">
                 <div className="lg:sticky lg:top-10 max-w-md mx-auto lg:mx-0">
                     <div className="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
@@ -400,7 +397,7 @@ const Checkout = () => {
                     </div>
 
                     <div className="space-y-3 pb-6 border-b border-gray-200">
-                        {/* COUPON INPUT / BADGE */}
+                        {/* COUPON INPUT */}
                         {!isCouponApplied ? (
                              <div className="flex gap-2">
                                 <div className="relative flex-1">
@@ -413,11 +410,7 @@ const Checkout = () => {
                                         onChange={(e) => setCouponCode(e.target.value)}
                                     />
                                 </div>
-                                <button 
-                                    onClick={handleApplyCoupon}
-                                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${couponCode ? 'bg-gray-800 text-white hover:bg-black' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-                                    disabled={!couponCode}
-                                >
+                                <button onClick={handleApplyCoupon} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${couponCode ? 'bg-gray-800 text-white hover:bg-black' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`} disabled={!couponCode}>
                                     Apply
                                 </button>
                             </div>
@@ -427,12 +420,7 @@ const Checkout = () => {
                                     <Tag size={16} />
                                     <span>{couponCode.toUpperCase()}</span>
                                 </div>
-                                <button 
-                                    onClick={handleRemoveCoupon}
-                                    className="text-gray-400 hover:text-red-500 transition-colors"
-                                >
-                                    <X size={16} />
-                                </button>
+                                <button onClick={handleRemoveCoupon} className="text-gray-400 hover:text-red-500 transition-colors"><X size={16} /></button>
                             </div>
                         )}
                         
@@ -448,7 +436,6 @@ const Checkout = () => {
                             <span className="font-medium text-gray-900">₦{shippingFee.toLocaleString()}</span>
                         </div>
                         
-                        {/* DISCOUNT ROW */}
                         {discount > 0 && (
                             <div className="flex justify-between text-sm text-palmeGreen font-bold animate-fade-in bg-green-50 p-2 rounded">
                                 <span>Discount</span>
@@ -471,7 +458,6 @@ const Checkout = () => {
                     </div>
                 </div>
             </div>
-
         </div>
         </div>
     );

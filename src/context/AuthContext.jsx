@@ -10,14 +10,18 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   
-    
+ 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState('login'); 
 
   useEffect(() => {
     const storedUser = localStorage.getItem('palme_user');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('palme_token');
+    
+    if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
+     
+     
     }
     setLoading(false);
   }, []);
@@ -27,41 +31,13 @@ export const AuthProvider = ({ children }) => {
     setShowAuthModal(true);
   };
 
-    
-  const login = async (emailOrUser, passwordOrToken) => {
-    
-      
-      
-    if (typeof emailOrUser === 'object' && emailOrUser !== null) {
-        setUser(emailOrUser);
-        localStorage.setItem('palme_user', JSON.stringify(emailOrUser));
-        localStorage.setItem('palme_token', passwordOrToken);
-          
-        return true;
-    }
-
-      
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await axios.post(`${API_URL}/api/auth/login`, { 
-          email: emailOrUser, 
-          password: passwordOrToken 
-      });
-      
-      const { user, token } = res.data;
-      
-      setUser(user);
-      localStorage.setItem('palme_user', JSON.stringify(user));
+ 
+ 
+  const login = (userData, token) => {
+      setUser(userData);
+      localStorage.setItem('palme_user', JSON.stringify(userData));
       localStorage.setItem('palme_token', token);
-      
-      toast.success(`Welcome back, ${user.name.split(' ')[0]}!`);
-      setShowAuthModal(false);
       return true;
-    } catch (error) {
-      const errorMsg = error.response?.data?.message || "Login failed. Check your email/password.";
-      toast.error(errorMsg);
-      return false;
-    }
   };
 
   const logout = () => {

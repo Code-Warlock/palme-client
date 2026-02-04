@@ -50,7 +50,7 @@ const AnnouncementBar = () => {
                   <FontAwesomeIcon icon={faPhone} /> +2349134033103
                 </span>
                 <span className="flex items-center gap-2">
-                  <FontAwesomeIcon icon={faEnvelope} /> nali@palmefoods.com
+                  <FontAwesomeIcon icon={faEnvelope} /> oreo@palmefoods.com
                 </span>
               </div>
 
