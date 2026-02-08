@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff } from 'lucide-react'; 
-import logo from '../assets/logo-green.png';
+import logo from '../assets/logo.png';
 import Navbar from './Navbar';
 import Footer from './Footer';
 

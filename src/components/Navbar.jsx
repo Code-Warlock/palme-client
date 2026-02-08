@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoppingCart, faBars, faTimes, faSignOutAlt, faHistory, faChevronDown, faUser } from '@fortawesome/free-solid-svg-icons';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import logo from '../assets/logo-green.png';
+import logo from '../assets/logo.png';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,7 +65,7 @@ const Navbar = () => {
             <img 
                src={logo} 
                alt="PalmeFoods" 
-               className="h-24 md:h-28 w-auto min-w-[120px] object-contain object-left" 
+               className="h-14 md:h-14 w-auto min-w-[120px] object-contain object-left" 
             />
           </Link>
 

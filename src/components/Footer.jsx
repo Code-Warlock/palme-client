@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebookF, faInstagram, faWhatsapp, faTiktok, faXTwitter } from '@fortawesome/free-brands-svg-icons'; 
 import { MapPin, Phone, Mail, ArrowRight, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import logo from '../assets/logo-green.png';
+import logo from '../assets/logo.png';
 import toast from 'react-hot-toast';
 
 const Footer = () => {
