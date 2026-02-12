@@ -63,6 +63,29 @@ const OrderSuccess = () => {
                 </div>
             </div>
 
+           
+            <div className="border-t border-gray-100 pt-4 space-y-2">
+                <div className="flex justify-between text-gray-600">
+                    <span>Subtotal</span>
+                    <span>₦{order.subtotal.toLocaleString()}</span>
+                </div>
+                
+                
+                {order.shippingFee > 0 && (
+                    <div className="flex justify-between text-gray-600">
+                        <span>Delivery Fee</span>
+                        <span>₦{order.shippingFee.toLocaleString()}</span>
+                    </div>
+                )}
+
+                {order.discountAmount > 0 && (
+                    <div className="flex justify-between text-palmeGreen">
+                        <span>Discount</span>
+                        <span>-₦{order.discountAmount.toLocaleString()}</span>
+                    </div>
+                )}
+            </div>
+
             <div className="border-t-2 border-dashed border-gray-200 pt-4 flex justify-between items-center">
                 <span className="font-bold text-lg text-gray-800">Total Paid</span>
                 <span className="font-bold text-2xl text-palmeGreen">₦{order.totalAmount.toLocaleString()}</span>
