@@ -70,11 +70,18 @@ const OrderSuccess = () => {
                     <span>₦{order.subtotal.toLocaleString()}</span>
                 </div>
                 
-                
                 {order.shippingFee > 0 && (
                     <div className="flex justify-between text-gray-600">
                         <span>Delivery Fee</span>
                         <span>₦{order.shippingFee.toLocaleString()}</span>
+                    </div>
+                )}
+
+                
+                {order.tipAmount > 0 && (
+                    <div className="flex justify-between text-gray-600">
+                        <span>Support / Tip</span>
+                        <span>₦{order.tipAmount.toLocaleString()}</span>
                     </div>
                 )}
 

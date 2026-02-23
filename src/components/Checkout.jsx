@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { PaystackButton } from 'react-paystack'; 
 import { useAuth } from '../context/AuthContext';
-import { ChevronRight, HelpCircle, Lock, AlertCircle, Tag, X, Truck, Info, Heart } from 'lucide-react';
+
+import { ChevronRight, HelpCircle, Lock, AlertCircle, Tag, X, Truck, Info, Heart, Globe } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 const Checkout = () => {
@@ -22,7 +23,6 @@ const Checkout = () => {
     const [couponCode, setCouponCode] = useState('');
     const [discount, setDiscount] = useState(0);
     const [isCouponApplied, setIsCouponApplied] = useState(false); 
-    
     
     const [tipPercentage, setTipPercentage] = useState(0);
     const [customTip, setCustomTip] = useState(''); 
@@ -82,24 +82,26 @@ const Checkout = () => {
 
     const filteredParks = Array.isArray(parks) ? parks.filter(p => p?.state?.toLowerCase() === selectedState.toLowerCase()) : [];
     
+    
     let shippingFee = 0;
     if (deliveryType === 'doorstep') {
         shippingFee = getNumericPrice(settings.doorstep_price);
-    } else {
+    } else if (deliveryType === 'park') {
         if (selectedLocation) {
             shippingFee = getNumericPrice(selectedLocation.basePrice || selectedLocation.price || settings.park_price);
         } else {
             shippingFee = getNumericPrice(settings.park_price);
         }
+    } else if (deliveryType === 'international') {
+        shippingFee = 0; 
     }
     
     const weightLimit = getNumericPrice(settings.weight_threshold) || 20;
-    const isHeavy = totalWeight > weightLimit;
+    const isHeavy = totalWeight > weightLimit && deliveryType !== 'international'; 
     const heavyMessage = settings.heavy_weight_note 
         ? settings.heavy_weight_note.replace('[limit]', weightLimit)
         : `Your order exceeds ${weightLimit}kg. Additional shipping charges may apply.`;
 
-    
     const tipAmount = tipPercentage === 'custom' 
         ? (parseFloat(customTip) || 0) 
         : (cartTotal * tipPercentage) / 100;
@@ -159,7 +161,7 @@ const Checkout = () => {
             customer: { name: `${firstName} ${lastName}`, email, phone, address },
             items: cartItems,
             deliveryMethod: deliveryType,
-            parkLocation: selectedLocation ? (selectedLocation.name || selectedLocation.parkName) : '',
+            parkLocation: selectedLocation ? (selectedLocation.name || selectedLocation.parkName) : (deliveryType === 'international' ? 'Overseas' : ''),
             totalAmount: finalTotal,
             totalWeight: totalWeight, 
             isHeavy: isHeavy,
@@ -202,9 +204,11 @@ const Checkout = () => {
         reference: reference, 
     };
 
+    
     const isFormValid = () => {
         if (!email) return false;
         if (deliveryType === 'doorstep' && !address) return false;
+        if (deliveryType === 'international' && !address) return false;
         if (deliveryType === 'park' && !selectedLocation) return false;
         return true;
     };
@@ -212,6 +216,7 @@ const Checkout = () => {
     const handleValidationFail = () => {
         if (!email) toast.error("Enter email");
         else if (deliveryType === 'doorstep' && !address) toast.error("Enter address");
+        else if (deliveryType === 'international' && !address) toast.error("Enter your country and address");
         else if (deliveryType === 'park' && !selectedLocation) toast.error("Select park");
     };
 
@@ -221,7 +226,6 @@ const Checkout = () => {
 
         <div className="w-full max-w-6xl bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col lg:flex-row border border-gray-200">
             
-           
             <div className="w-full lg:w-[58%] lg:pr-14 lg:pl-10 pt-10 pb-12 px-6 order-2 lg:order-1 bg-white">
                 
                 <div className="mb-6 flex justify-between items-center">
@@ -255,9 +259,12 @@ const Checkout = () => {
                         </div>
                     )}
 
+                    
                     <div className="border border-gray-300 rounded-lg overflow-hidden">
+                        
+                        
                         <div 
-                            className={`flex items-center justify-between p-4 cursor-pointer border-b border-gray-200 ${deliveryType === 'park' ? 'bg-palmeGreen/10' : 'bg-white'}`}
+                            className={`flex items-center justify-between p-4 cursor-pointer border-b border-gray-200 transition-colors ${deliveryType === 'park' ? 'bg-palmeGreen/10' : 'bg-white'}`}
                             onClick={() => setDeliveryType('park')}
                         >
                             <div className="flex items-center gap-3">
@@ -273,8 +280,9 @@ const Checkout = () => {
                             </span>
                         </div>
 
+                        
                         <div 
-                            className={`flex items-center justify-between p-4 cursor-pointer ${deliveryType === 'doorstep' ? 'bg-palmeGreen/10' : 'bg-white'}`}
+                            className={`flex items-center justify-between p-4 cursor-pointer border-b border-gray-200 transition-colors ${deliveryType === 'doorstep' ? 'bg-palmeGreen/10' : 'bg-white'}`}
                             onClick={() => setDeliveryType('doorstep')}
                         >
                             <div className="flex items-center gap-3">
@@ -285,33 +293,59 @@ const Checkout = () => {
                             </div>
                             <span className="text-sm font-bold text-gray-900">₦{getNumericPrice(settings.doorstep_price).toLocaleString()}</span>
                         </div>
+
+                        
+                        <div 
+                            className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${deliveryType === 'international' ? 'bg-blue-50' : 'bg-white'}`}
+                            onClick={() => setDeliveryType('international')}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${deliveryType === 'international' ? 'border-blue-600 bg-blue-600' : 'border-gray-300 bg-white'}`}>
+                                    {deliveryType === 'international' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                                </div>
+                                <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                    International / Overseas
+                                </span>
+                            </div>
+                            <span className="text-sm font-bold text-blue-600 flex items-center gap-1">
+                                <Globe size={14} /> Calculated Later
+                            </span>
+                        </div>
+
                     </div>
                 </section>
 
-                <div className="mb-8 bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-3 animate-fade-in">
-                    <div className="mt-0.5 text-blue-500"><Info size={18} /></div>
+                
+                <div className={`mb-8 p-4 rounded-lg border flex gap-3 animate-fade-in ${deliveryType === 'international' ? 'bg-blue-50 border-blue-200' : 'bg-green-50 border-green-200'}`}>
+                    <div className={`mt-0.5 ${deliveryType === 'international' ? 'text-blue-500' : 'text-palmeGreen'}`}><Info size={18} /></div>
                     <div className="text-sm text-gray-700 leading-relaxed">
-                        <span className="font-bold text-blue-800 block mb-1">
-                            {deliveryType === 'doorstep' ? 'Delivery Note:' : 'Pickup Instruction:'}
+                        <span className={`font-bold block mb-1 ${deliveryType === 'international' ? 'text-blue-800' : 'text-green-800'}`}>
+                            {deliveryType === 'doorstep' ? 'Delivery Note:' : deliveryType === 'international' ? 'Overseas Notice:' : 'Pickup Instruction:'}
                         </span>
-                        {deliveryType === 'doorstep' ? settings.doorstep_note : settings.park_note}
+                        {deliveryType === 'doorstep' && settings.doorstep_note}
+                        {deliveryType === 'park' && settings.park_note}
+                        {deliveryType === 'international' && "You are currently paying for the products only. Our logistics team will contact you within 24 hours via email or phone to discuss and arrange your overseas shipping fees."}
                     </div>
                 </div>
 
                 <section className="mb-10">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Shipping Address</h2>
                     <div className="space-y-3">
-                        <div className="relative">
-                            <select 
-                                className="w-full p-3.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-palmeGreen text-sm bg-white appearance-none"
-                                value={selectedState}
-                                onChange={(e) => { setSelectedState(e.target.value); setSelectedLocation(null); }}
-                            >
-                                <option value="">Select State</option>
-                                {["Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"].map(state => (<option key={state} value={state}>{state}</option>))}
-                            </select>
-                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" size={16} />
-                        </div>
+                        
+                        
+                        {deliveryType !== 'international' && (
+                            <div className="relative">
+                                <select 
+                                    className="w-full p-3.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-palmeGreen text-sm bg-white appearance-none"
+                                    value={selectedState}
+                                    onChange={(e) => { setSelectedState(e.target.value); setSelectedLocation(null); }}
+                                >
+                                    <option value="">Select State</option>
+                                    {["Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"].map(state => (<option key={state} value={state}>{state}</option>))}
+                                </select>
+                                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" size={16} />
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-2 gap-3">
                             <input type="text" placeholder="First name" className="w-full p-3.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-palmeGreen text-sm" value={firstName} onChange={e => setFirstName(e.target.value)}/>
@@ -319,7 +353,7 @@ const Checkout = () => {
                         </div>
                         
                         <div className="relative">
-                            <input type="text" placeholder="Phone Number" className="w-full p-3.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-palmeGreen text-sm" value={phone} onChange={e => setPhone(e.target.value)}/>
+                            <input type="text" placeholder="Phone Number (Include Country Code)" className="w-full p-3.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-palmeGreen text-sm" value={phone} onChange={e => setPhone(e.target.value)}/>
                         </div>
 
                         {deliveryType === 'park' ? (
@@ -347,6 +381,14 @@ const Checkout = () => {
                                     </div>
                                 )}
                             </div>
+                        ) : deliveryType === 'international' ? (
+                            <textarea 
+                                rows="3"
+                                placeholder="Full Delivery Address (Include Country, City, and Zip Code)" 
+                                className="w-full p-3.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                                value={address} 
+                                onChange={e => setAddress(e.target.value)}
+                            />
                         ) : (
                             <input type="text" placeholder="Street Address" className="w-full p-3.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-palmeGreen text-sm" value={address} onChange={e => setAddress(e.target.value)}/>
                         )}
@@ -373,7 +415,6 @@ const Checkout = () => {
                 </div>
             </div>
 
-           
             <div className="w-full lg:w-[42%] bg-[#FAFAFA] border-l border-gray-200 pt-10 px-6 lg:pl-10 lg:pr-14 order-1 lg:order-2">
                 <div className="lg:sticky lg:top-10 max-w-md mx-auto lg:mx-0">
                     <div className="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
@@ -399,7 +440,7 @@ const Checkout = () => {
                     </div>
 
                     <div className="space-y-3 pb-6 border-b border-gray-200">
-                       
+                        
                         {!isCouponApplied ? (
                              <div className="flex gap-2">
                                 <div className="relative flex-1">
@@ -430,12 +471,15 @@ const Checkout = () => {
                             <span>Subtotal</span>
                             <span className="font-medium text-gray-900">₦{cartTotal.toLocaleString()}</span>
                         </div>
+                        
                         <div className="flex justify-between text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                                 <span>Shipping</span>
                                 <HelpCircle size={12} className="text-gray-400" />
                             </div>
-                            <span className="font-medium text-gray-900">₦{shippingFee.toLocaleString()}</span>
+                            <span className="font-medium text-gray-900">
+                                {deliveryType === 'international' ? 'Calculated Later' : `₦${shippingFee.toLocaleString()}`}
+                            </span>
                         </div>
                         
                         {discount > 0 && (
@@ -445,7 +489,6 @@ const Checkout = () => {
                             </div>
                         )}
 
-                       
                         <div className="pt-4 border-t border-dashed border-gray-200">
                             <div className="flex items-center gap-1 text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
                                 <Heart size={12} className="text-palmeRed" /> Support the Team (Optional)
@@ -476,7 +519,6 @@ const Checkout = () => {
                                 </button>
                             </div>
                             
-                           
                             {tipPercentage === 'custom' && (
                                 <div className="mt-2 animate-fade-in">
                                     <div className="relative">
