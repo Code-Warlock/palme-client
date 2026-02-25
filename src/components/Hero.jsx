@@ -73,7 +73,7 @@ const Hero = () => {
           
           <div className="inline-flex items-center gap-2 border border-palmeGreen/20 rounded-full px-4 py-1 bg-white shadow-sm">
              <span className="w-2 h-2 rounded-full bg-palmeGreen animate-pulse"></span>
-             <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-palmeGreen">Est. 2026 • PalmeFoods Store</span>
+             <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase text-palmeGreen">Est. 2025 • PalmeFoods Store</span>
           </div>
           
           <h1 className="text-4xl md:text-7xl font-serif leading-tight text-gray-900">
