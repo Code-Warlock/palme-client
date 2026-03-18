@@ -44,7 +44,7 @@ const Footer = () => {
             className="h-28 w-auto object-contain brightness-110" 
           />
           <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-            Bringing the authentic taste of Nigerian palm oil to the global kitchen. Pure, unadulterated, and sustainably sourced from the heart of Osun State.
+            Experience the depth, richness, and authenticity of premium palm oil sourced directly from trusted Nigerian farms. Naturally organic, carefully filtered, and crafted for both everyday meals and refined cooking.
           </p>
           <div className="flex gap-3 flex-wrap">
             <SocialIcon icon={faWhatsapp} link="https://wa.me/2349134033103" color="hover:bg-[#25D366]" />
