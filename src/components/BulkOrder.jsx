@@ -28,11 +28,28 @@ const BulkOrder = () => {
 
     try {
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        await axios.post(`${API_URL}/api/contact`, formData);
+        
+        
+        const payload = {
+            name: formData.name,
+            email: formData.email,
+            subject: `Bulk Order Request: ${formData.serviceType}`, 
+            message: `
+Business Name: ${formData.businessName || 'N/A'}
+Service Type: ${formData.serviceType}
+Estimated Quantity: ${formData.quantity}
+
+Additional Details:
+${formData.message}
+            `.trim() 
+        };
+
+        await axios.post(`${API_URL}/api/contact`, payload);
         
         setSuccess(true);
         toast.success("Request sent! We will contact you shortly.");
     } catch (err) {
+        console.error("Submission Error:", err.response?.data);
         toast.error("Failed to send request. Please try WhatsApp.");
     } finally {
         setLoading(false);
