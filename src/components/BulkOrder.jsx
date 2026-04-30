@@ -28,7 +28,7 @@ const BulkOrder = () => {
 
     try {
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        await axios.post(`${API_URL}/api/custom-request`, formData);
+        await axios.post(`${API_URL}/api/contact`, formData);
         
         setSuccess(true);
         toast.success("Request sent! We will contact you shortly.");
